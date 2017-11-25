@@ -11,6 +11,8 @@
     <PackageTags>Ioc Dependency-Injection Inversion-of-Control WinRT Windows-Runtime</PackageTags>
     <Description>An ultra lightweight Inversion of Control container for the .Net framework. See LightInject.Source for the source distribution.</Description>    
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>    
-    <DebugType>Full</DebugType>  
+    <DebugType>Full</DebugType>    
+    <SignAssembly>true</SignAssembly>    
+    <AssemblyOriginatorKeyFile>..\..\..\eberzosagh.snk</AssemblyOriginatorKeyFile>  
   </PropertyGroup>        
 </Project>
