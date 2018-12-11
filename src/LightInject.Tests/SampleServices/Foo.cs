@@ -150,6 +150,16 @@ namespace LightInject.SampleLibrary
         public IBar Bar { get; private set; }
     }
 
+    public class FooWithAnotherDependency : IFoo
+    {
+        public FooWithAnotherDependency(IBar anotherBar)
+        {
+            Bar = anotherBar;
+        }
+
+        public IBar Bar { get; private set; }
+    }
+
     public class AnotherFooWithDependency : IFoo
     {
         public AnotherFooWithDependency(IBar bar)
@@ -572,6 +582,24 @@ namespace LightInject.SampleLibrary
     {
         public HalfClosedOpenGenericFooDecorator(IFoo<string, T1> foo)
         {
+        }
+    }
+
+    public class BarBase
+    {
+
+    }
+
+    public class InheritedBar :BarBase
+    {
+
+    }
+
+    public class FooDecoratorWithBarBaseConstraint<T> : IFoo<T> where T:BarBase
+    {
+        public FooDecoratorWithBarBaseConstraint(IFoo<T> foo)
+        {
+
         }
     }
 

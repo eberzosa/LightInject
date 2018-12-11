@@ -1,4 +1,5 @@
-﻿namespace LightInject.Tests
+﻿#if NET452 || NET46 || NETCOREAPP2_0
+namespace LightInject.Tests
 {
     using System;
     using System.Diagnostics;
@@ -34,7 +35,15 @@
         {
             var startInformation = new ProcessStartInfo(peverifyPath);
             startInformation.CreateNoWindow = true;
-            startInformation.Arguments = "\"" + filename + "\" /MD /IL /UNIQUE /VERBOSE";
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                startInformation.Arguments = "\"" + filename + "\" --verify all";
+            }
+            else
+            {
+                startInformation.Arguments = "\"" + filename + "\" /MD /IL /UNIQUE /VERBOSE";
+            }
+            
             startInformation.RedirectStandardOutput = true;
             startInformation.UseShellExecute = false;
             return startInformation;
@@ -42,11 +51,17 @@
 
         private static string GetPathToPEVerify()
         {
-            var peverifyPath = @"C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\x64\peverify.exe";
-            
-            //var peverifyPath = Path.Combine(
-            //    ToolLocationHelper.GetPathToDotNetFrameworkSdk(TargetDotNetFrameworkVersion.VersionLatest,VisualStudioVersion.VersionLatest), @"bin\NETFX 4.0 Tools\peverify.exe");
+            string peverifyPath = "";
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                peverifyPath = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/peverify";
+            }
+            else
+            {
+                peverifyPath = @"C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\x64\peverify.exe";
+            }                                    
             return peverifyPath;
         }
     }
 }
+#endif

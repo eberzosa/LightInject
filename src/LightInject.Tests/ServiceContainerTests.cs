@@ -305,7 +305,7 @@ namespace LightInject.Tests
         }
 
         [Fact]
-        public void issue_231()
+        public void Issue_231()
         {
             var container = CreateContainer();
             container.Register<IFoo, Foo>("foo", new PerContainerLifetime());
@@ -315,7 +315,7 @@ namespace LightInject.Tests
         }
 
         [Fact]
-        public void issue_168()
+        public void Issue_168()
         {
             var serviceContainer = new ServiceContainer();
             serviceContainer.Register<IBar, Bar>("bar");
@@ -975,6 +975,15 @@ namespace LightInject.Tests
         }
 
         [Fact]
+        public void GetAllInstances_NamedEnumerable_ReturnsAllInstances()
+        {
+            var container = CreateContainer();
+            container.Register<IEnumerable<Foo>>(f => new[] { new Foo() }, "SomeEnumerable");
+            var instances = container.GetAllInstances<Foo>();
+            Assert.Single(instances);
+        }
+
+        [Fact]
         public void GetAllInstances_TwoOpenGenericServices_ReturnsAllInstances()
         {
             var container = CreateContainer();
@@ -1172,21 +1181,7 @@ namespace LightInject.Tests
         {
             var container = CreateContainer();            
             Assert.False(container.CanGetInstance(typeof(Func<IFoo>), string.Empty));
-        }
-        [Fact]
-        public void CanGetInstance_LazyForKnownService_ReturnsTrue()
-        {
-            var container = CreateContainer();
-            container.Register<IFoo, Foo>();
-            Assert.True(container.CanGetInstance(typeof(Lazy<IFoo>), string.Empty));
-        }
-
-        [Fact]
-        public void CanGetInstance_LazyForUnknownService_ReturnsFalse()
-        {
-            var container = CreateContainer();            
-            Assert.False(container.CanGetInstance(typeof(Lazy<IFoo>), string.Empty));
-        }
+        }       
 
         [Fact]
         public void GetInstance_RegisterAfterGetInstance_ReturnsDependencyOfSecondRegistration()
@@ -1264,8 +1259,10 @@ namespace LightInject.Tests
             
             using (var container = new ServiceContainer())
             {               
-                container.Register<IFoo, Foo>(lifetime);                
+                container.Register<IFoo, Foo>(lifetime);
+                container.GetInstance<IFoo>();
             }
+
             Assert.True(lifetime.IsDisposed);
         }
 
@@ -1404,38 +1401,6 @@ namespace LightInject.Tests
             container.Register<IFoo, FooWithDependency>();
            
             Assert.Throws<InvalidOperationException>(() => container.GetInstance<IFoo>());            
-        }
-
-        [Fact]
-        public void GetInstance_LazyService_ReturnsInstance()
-        {            
-            var container = new ServiceContainer();
-            container.Register<IFoo, Foo>();
-
-            var lazyInstance = container.GetInstance<Lazy<IFoo>>();
-
-            Assert.IsAssignableFrom<Lazy<IFoo>>(lazyInstance);
-        }
-
-        [Fact]
-        public void GetInstance_LazyService_DoesNotCreateTarget()
-        {
-            var container = new ServiceContainer();
-            container.Register<IFoo, LazyFoo>();
-            LazyFoo.Instances = 0;
-            container.GetInstance<Lazy<IFoo>>();
-            Assert.Equal(0, LazyFoo.Instances);
-        }
-
-        [Fact]
-        public void GetInstance_LazyService_CreatesTargetWhenValuePropertyIsAccessed()
-        {
-            var container = new ServiceContainer();
-            container.Register<IFoo, Foo>();
-            
-            var instance = container.GetInstance<Lazy<IFoo>>();
-
-            Assert.IsAssignableFrom<Foo>(instance.Value);
         }
 
         [Fact]
@@ -1724,7 +1689,7 @@ namespace LightInject.Tests
         }
 
         
-#if NET452 || NET40 || NET46
+#if NET452 || NET40 || NET46 || NETCOREAPP2_0
         [Fact]
         public void RegisterFrom_CompositionRoot_CallsCompositionRootExecutor()
         {

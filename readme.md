@@ -1,6 +1,6 @@
-[![AppVeyor](https://img.shields.io/appveyor/ci/seesharper/lightinject.svg?maxAge=2592000)]()
-[![NuGet](https://img.shields.io/nuget/v/LightInject.svg?maxAge=2592000)]()
-[![GitHub tag](https://img.shields.io/github/tag/seesharper/lightinject.svg?maxAge=2592000)]()
+[![AppVeyor](https://img.shields.io/appveyor/ci/seesharper/lightinject.svg?maxAge=2592000)](https://ci.appveyor.com/project/seesharper/lightinject/branch/master)
+[![NuGet](https://img.shields.io/nuget/v/LightInject.svg?maxAge=2592000)](https://www.nuget.org/packages/LightInject)
+[![GitHub tag](https://img.shields.io/github/tag/seesharper/lightinject.svg?maxAge=2592000)](https://github.com/seesharper/LightInject/releases/latest)
 
 ## Installing ##
 
@@ -118,6 +118,57 @@ This behavior can be overridden using the **EnableVariance** container option.
 	var instances = container.GetAllInstances<Foo>();
 	Assert.AreEqual(1, instances.Count());
 
+We can also selectively decide to apply variance only for certain `IEnumerable<T>` services.
+
+```C#
+options.VarianceFilter = (enumerableType) => enumerableType.GetGenericArguments()[0] == typeof(IFoo);
+```
+
+
+
+#### Ordering
+
+Sometimes the ordering of the resolved services are important and **LightInject** solves this by ordering services by their service name.
+
+```c#
+container.Register<IFoo, Foo1>("A");
+container.Register<IFoo, Foo2>("B");
+container.Register<IFoo, Foo3>("C");
+
+var instances = container.GetAllInstances<IFoo>().ToArray();
+Assert.IsType<Foo1>(instances[0]);
+Assert.IsType<Foo2>(instances[1]);
+Assert.IsType<Foo3>(instances[2]);
+```
+
+We can also register multiple implementations for a given service type using the `RegisterOrdered` method.
+
+```c#
+var container = CreateContainer();
+container.RegisterOrdered(typeof(IFoo), new[] {typeof(Foo1), typeof(Foo2), typeof(Foo3)},
+    type => new PerContainerLifetime());
+
+var instances = container.GetAllInstances<IFoo>().ToArray();
+
+Assert.IsType<Foo1>(instances[0]);
+Assert.IsType<Foo2>(instances[1]);
+Assert.IsType<Foo3>(instances[2]);
+```
+
+The `RegisterOrdered` method gives each implementation a service name that can be used for ordering when resolving these services. By default the service name is formatted like `001`, `002` and so on. 
+If we need so change this convention, we can do this by passing a format function to the `RegisterOrdered` method.
+
+```c#
+container.RegisterOrdered(typeof(IFoo<>), new[] { typeof(Foo1<>), typeof(Foo2<>), typeof(Foo3<>) },
+    type => new PerContainerLifetime(), i => $"A{i.ToString().PadLeft(3,'0')}");
+
+var services = container.AvailableServices.Where(sr => sr.ServiceType == typeof(IFoo<>))
+    .OrderBy(sr => sr.ServiceName).ToArray();
+Assert.Equal("A001", services[0].ServiceName);
+Assert.Equal("A002", services[1].ServiceName);
+Assert.Equal("A003", services[2].ServiceName);
+```
+
 ### Values ###
 
 Registers the value as a constant.
@@ -125,6 +176,80 @@ Registers the value as a constant.
     container.RegisterInstance<string>("SomeValue");
     var value = container.GetInstance<string>();
     Assert.AreEqual("SomeValue, value);
+
+
+
+### Compilation
+
+**LightInject** uses dynamic code compilation either in the form of System.Reflection.Emit or compiled expression trees. When a service is requested from the container, the code needed for creating the service instance is generated and compiled and a delegate for that code is stored for lookup later on so that we only compile it once. These delegates are stored in an AVL tree that ensures maximal performance when looking up a delegate for a given service type. If fact, looking up these delegates is what sets the top performing containers apart. Most high performance container emits approximately the same code, but the approach to storing these delegates may differ. 
+
+**LightInject** provides lock-free service lookup meaning that no locks are involved for getting a service instance after its initial generation and compilation. The only time **LightInject** actually creates a lock is when generating the code for a given service.  That does however mean a potential lock contention problem when many concurrent requests asks for services for the first time.
+
+**LightInject** deals with this potential problem by providing an API for compilation typically used when an application starts.
+
+The following example shows how to compile all registered services.
+
+```c#
+container.Compile();
+```
+
+One thing to be aware of is that not all services are backed by its own delegate. 
+
+Consider the following service:
+
+```c#
+public class Foo
+{
+	public Foo(Bar bar)
+    {
+    	Bar = bar;
+    }
+} 
+```
+
+Registered and resolved like this:
+
+```c#
+container.Register<Foo>();
+container.Register<Bar>();
+var foo = container.GetInstance<Foo>();
+```
+
+In this case we only create a delegate for resolving `Foo` since that is the only service that is directly requested from the container. The code for creating the `Bar` instance is embedded inside the code for creating the `Foo` instance and hence there is only one delegate created.
+
+We call `Foo` a root service since it is directly requested from the container.	
+
+In fact lets just have a look at the IL generated for creating the `Foo` instance. 
+
+```assembly
+newobj Void .ctor() // Bar
+newobj Void .ctor(LightInject.SampleLibrary.IBar) //Foo
+```
+
+What happens here is that a new instance of `Bar` is created and pushed onto the stack and then we create the `Foo` instance. This is the code that the delegate for `Foo` points to. 
+
+The reason for such a relatively detailed explanation is to illustrate that we don't always create a delegate for a given service and by simply doing a `container.Compile()` we might create a lot of delegates that is never actually executed.  Probably no big deal as long as we don't have tens of thousands of services, but just something to be aware of.
+
+**LightInject** does not attempt to identify root services as that would be very difficult for various reasons.
+
+We can instead use a predicate when compiling services up front.
+
+```C#
+container.Compile(sr => sr.ServiceType == typeof(Foo));
+```
+
+#### Open Generics
+
+**LightInject** cannot compile open generic services since the actual generic arguments are not known at "compile" time. 
+
+We can however specify the generic arguments like this:
+
+```c#
+container.Compile<Foo<int>>()
+```
+
+**LightInject** will create a log entry every time a new delegate is created so that information can be used to identify root services that could be compiled up front. In addition to this, a log entry (warning) is also created when trying to compile an open generic service up front.
+
 
 
 ## Lifetime ##
@@ -411,9 +536,9 @@ We can also do a combination of supplied values and dependencies.
 ### Property Injection ###
 
 	public interface IFoo {}
-
+	
 	public interface IBar {}
-
+	
 	public class Foo : IFoo
 	{
 		public IBar Bar { get; set; }
@@ -482,16 +607,44 @@ Use the **Initialize** method to perform service instance initialization/post-pr
 
 LightInject is capable of registering services by looking at the types of a given assembly.
 
-    container.RegisterAssembly(typeof(IFoo).Assembly)
+```c#
+container.RegisterAssembly(typeof(IFoo).Assembly)
+```
 
 To filter out the services to be registered with the container, we can provide a predicate that makes it possible to inspect the service type and the implementing type.
 
-	container.RegisterAssembly(typeof(IFoo).Assembly, (serviceType, implementingType) => serviceType.NameSpace == "SomeNamespace");
+```c#
+container.RegisterAssembly(typeof(IFoo).Assembly, (serviceType, implementingType) => serviceType.NameSpace == "SomeNamespace");
+```
 
 It is also possible to scan a set assembly files based on a search pattern.
 
-    container.RegisterAssembly("SomeAssemblyName*.dll");  
+```c#
+container.RegisterAssembly("SomeAssemblyName*.dll");  
+```
+When scanning assemblies, **LightInject** will register services using a service name that by default is the implementing type name. This behavior can be changed by specifying a function delegate to provide the name based on the service type and the implementing type.
 
+```c#
+container.RegisterAssembly(typeof(IFoo).Assembly, () => new PerContainerLifetime(), (serviceType, implementingType) => serviceType.NameSpace == "SomeNamespace", (serviceType, implementingType) => "Provide custom service name here");
+```
+
+We can also change this behavior globally for all registrations by implementing the **IServiceNameProvider** interface.
+
+```c#
+public class CustomServiceNameProvider : IServiceNameProvider
+{
+	public string GetServiceName(Type serviceType, Type implementingType)
+    {
+    	return "Provide custom service name here";  
+    }
+}
+```
+
+To change the default behavior for all registrations we simply change this dependency on the container before we start scanning assemblies.
+
+```c#
+container.ServiceNameProvider = new CustomServiceNameProvider();
+```
 
 
 
