@@ -1,49 +1,61 @@
-#load "nuget:Dotnet.Build, 0.3.9"
+#load "nuget:Dotnet.Build, 0.5.0"
 #load "nuget:github-changelog, 0.1.5"
+#load "nuget:dotnet-steps, 0.0.1"
 #load "BuildContext.csx"
-using static FileUtils;
-using static Internalizer;
-using static xUnit;
-using static DotNet;
+
 using static ChangeLog;
 using static ReleaseManagement;
 
-Build(projectFolder);
-Test(testProjectFolder);
-//AnalyzeCodeCoverage(pathToTestAssembly, $"+[{projectName}]*");
-Pack(projectFolder, nuGetArtifactsFolder, Git.Default.GetCurrentShortCommitHash());
 
-using(var sourceRepoFolder = new DisposableFolder())
+[StepDescription("Runs the tests with test coverage")]
+Step testcoverage = () =>
 {
-    string pathToSourceProjectFolder = Path.Combine(sourceRepoFolder.Path,"src","LightInject");
-    Copy(repoFolder, sourceRepoFolder.Path, new [] {".vs", "obj"});
-    Internalize(pathToSourceProjectFolder, exceptTheseTypes);
-    DotNet.Build(Path.Combine(sourceRepoFolder.Path,"src","LightInject"));
-    using(var nugetPackFolder = new DisposableFolder())
+    DotNet.TestWithCodeCoverage(projectName, testProjectFolder, coverageArtifactsFolder, targetFramework: "netcoreapp2.0", threshold: 90);
+};
+
+[StepDescription("Runs all the tests for all target frameworks")]
+Step test = () =>
+{
+    DotNet.Test(testProjectFolder);
+};
+
+[StepDescription("Creates the NuGet packages")]
+Step pack = () =>
+{
+    test();
+    testcoverage();
+    DotNet.Pack(projectFolder, nuGetArtifactsFolder, Git.Default.GetCurrentShortCommitHash());
+    NuGet.CreateSourcePackage(repoFolder, projectName, nuGetArtifactsFolder);
+};
+
+[DefaultStep]
+[StepDescription("Deploys packages if we are on a tag commit in a secure environment.")]
+AsyncStep deploy = async () =>
+{
+    pack();
+    if (!BuildEnvironment.IsSecure)
     {
-        var contentFolder = CreateDirectory(nugetPackFolder.Path, "content","net45", "LightInject");
-        Copy("LightInject.Source.nuspec", nugetPackFolder.Path);
-        string pathToSourceFileTemplate = Path.Combine(contentFolder, "LightInject.cs.pp");
-        Copy(Path.Combine(pathToSourceProjectFolder, "LightInject.cs"), pathToSourceFileTemplate);
-        FileUtils.ReplaceInFile(@"namespace \S*", $"namespace $rootnamespace$.{projectName}", pathToSourceFileTemplate);
-        NuGet.Pack(nugetPackFolder.Path, nuGetArtifactsFolder, version);
+        Logger.Log("Deployment can only be done in a secure environment");
+        return;
     }
-}
 
-if (BuildEnvironment.IsSecure)
+    await CreateReleaseNotes();
+
+    if (Git.Default.IsTagCommit())
     {
-        await CreateReleaseNotes();
-
-        if (Git.Default.IsTagCommit())
-        {
-            Git.Default.RequreCleanWorkingTree();
-            await ReleaseManagerFor(owner, projectName,BuildEnvironment.GitHubAccessToken)
-            .CreateRelease(Git.Default.GetLatestTag(), pathToReleaseNotes, Array.Empty<ReleaseAsset>());
-            NuGet.TryPush(nuGetArtifactsFolder);
-        }
+        Git.Default.RequireCleanWorkingTree();
+        await ReleaseManagerFor(owner, projectName, BuildEnvironment.GitHubAccessToken)
+        .CreateRelease(Git.Default.GetLatestTag(), pathToReleaseNotes, Array.Empty<ReleaseAsset>());
+        NuGet.TryPush(nuGetArtifactsFolder);
     }
+};
 
- private async Task CreateReleaseNotes()
+
+await StepRunner.Execute(Args);
+return 0;
+
+
+private async Task CreateReleaseNotes()
 {
     Logger.Log("Creating release notes");
     var generator = ChangeLogFrom(owner, projectName, BuildEnvironment.GitHubAccessToken).SinceLatestTag();

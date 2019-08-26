@@ -1,7 +1,7 @@
 ﻿/*********************************************************************************
     The MIT License (MIT)
 
-    Copyright (c) 2018 bernhard.richter@gmail.com
+    Copyright (c) 2019 bernhard.richter@gmail.com
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 ******************************************************************************
-    LightInject version 5.3.0
+    LightInject version 5.5.0
     http://www.lightinject.net/
     http://twitter.com/bernhardrichter
 ******************************************************************************/
@@ -34,7 +34,6 @@
 [module: System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:FieldsMustBePrivate", Justification = "Performance")]
 [module: System.Diagnostics.CodeAnalysis.SuppressMessage("MaintainabilityRules", "SA1403", Justification = "One source file")]
 [module: System.Diagnostics.CodeAnalysis.SuppressMessage("DocumentationRules", "SA1649", Justification = "One source file")]
-
 namespace LightInject
 {
     using System;
@@ -1297,6 +1296,15 @@ namespace LightInject
             => serviceRegistry.Register<TService, TImplementation>(new PerContainerLifetime());
 
         /// <summary>
+        /// Registers a singleton service of type <typeparamref name="TService"/> as a concrete service.
+        /// </summary>
+        /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
+        /// <typeparam name="TService">The type of service to register.</typeparam>
+        /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
+        public static IServiceRegistry RegisterSingleton<TService>(this IServiceRegistry serviceRegistry)
+            => serviceRegistry.Register<TService>(new PerContainerLifetime());
+
+        /// <summary>
         /// Registers a singleton service of type <typeparamref name="TService"/> with an implementing type of <typeparamref name="TImplementation"/>.
         /// </summary>
         /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
@@ -1317,6 +1325,16 @@ namespace LightInject
         /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
         public static IServiceRegistry RegisterSingleton(this IServiceRegistry serviceRegistry, Type serviceType, Type implementingType)
             => serviceRegistry.Register(serviceType, implementingType, new PerContainerLifetime());
+
+        /// <summary>
+        /// Registers a singleton service of type <paramref name="serviceType"/> as a concrete service type.
+        /// </summary>
+        /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
+        /// <param name="serviceType">The type of service to register.</param>
+        /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
+        public static IServiceRegistry RegisterSingleton(this IServiceRegistry serviceRegistry, Type serviceType)
+            => serviceRegistry.Register(serviceType, new PerContainerLifetime());
+
 
         /// <summary>
         /// Registers a singleton service of type <paramref name="serviceType"/> with an implementing type of <paramref name="implementingType"/>.
@@ -1362,7 +1380,17 @@ namespace LightInject
             => serviceRegistry.Register<TService, TImplementation>(new PerScopeLifetime());
 
         /// <summary>
-        /// Registers a Singleton service of type <typeparamref name="TService"/> with an implementing type of <typeparamref name="TImplementation"/>.
+        /// Registers a scoped service of type <typeparamref name="TService"/> as a concrete service.
+        /// </summary>
+        /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
+        /// <typeparam name="TService">The type of service to register.</typeparam>
+        /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
+        public static IServiceRegistry RegisterScoped<TService>(this IServiceRegistry serviceRegistry)
+            => serviceRegistry.Register<TService>(new PerScopeLifetime());
+
+
+        /// <summary>
+        /// Registers a scoped service of type <typeparamref name="TService"/> with an implementing type of <typeparamref name="TImplementation"/>.
         /// </summary>
         /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
         /// <param name="serviceName">The name of the service to register.</param>
@@ -1382,6 +1410,16 @@ namespace LightInject
         /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
         public static IServiceRegistry RegisterScoped(this IServiceRegistry serviceRegistry, Type serviceType, Type implementingType)
             => serviceRegistry.Register(serviceType, implementingType, new PerScopeLifetime());
+
+
+        /// <summary>
+        /// Registers a scoped service of type <paramref name="serviceType"/> as a concrete service type.
+        /// </summary>
+        /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
+        /// <param name="serviceType">The type of service to register.</param>
+        /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
+        public static IServiceRegistry RegisterScoped(this IServiceRegistry serviceRegistry, Type serviceType)
+            => serviceRegistry.Register(serviceType, new PerScopeLifetime());
 
         /// <summary>
         /// Registers a scoped service of type <paramref name="serviceType"/> with an implementing type of <paramref name="implementingType"/>.
@@ -1427,6 +1465,15 @@ namespace LightInject
             => serviceRegistry.Register<TService, TImplementation>();
 
         /// <summary>
+        /// Registers a transient service of type <typeparamref name="TService"/> as a concrete service.
+        /// </summary>
+        /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
+        /// <typeparam name="TService">The type of service to register.</typeparam>
+        /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
+        public static IServiceRegistry RegisterTransient<TService>(this IServiceRegistry serviceRegistry)
+            => serviceRegistry.Register<TService>();
+
+        /// <summary>
         /// Registers a transient service of type <typeparamref name="TService"/> with an implementing type of <typeparamref name="TImplementation"/>.
         /// </summary>
         /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
@@ -1447,6 +1494,15 @@ namespace LightInject
         /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
         public static IServiceRegistry RegisterTransient(this IServiceRegistry serviceRegistry, Type serviceType, Type implementingType)
             => serviceRegistry.Register(serviceType, implementingType);
+
+        /// <summary>
+        /// Registers a singleton service of type <paramref name="serviceType"/> as a concrete service type.
+        /// </summary>
+        /// <param name="serviceRegistry">The target <see cref="IServiceRegistry"/>.</param>
+        /// <param name="serviceType">The type of service to register.</param>
+        /// <returns>The <see cref="IServiceRegistry"/>, for chaining calls.</returns>
+        public static IServiceRegistry RegisterTransient(this IServiceRegistry serviceRegistry, Type serviceType)
+            => serviceRegistry.Register(serviceType);
 
         /// <summary>
         /// Registers a transient service of type <paramref name="serviceType"/> with an implementing type of <paramref name="implementingType"/>.
@@ -2251,7 +2307,7 @@ namespace LightInject
         public Func<Type, bool> VarianceFilter { get; set; } = _ => true;
 
         /// <summary>
-        /// Gets or sets the log factory that crates the delegate used for logging.
+        /// Gets or sets the log factory that creates the delegate used for logging.
         /// </summary>
         public Func<Type, Action<LogEntry>> LogFactory { get; set; }
 
@@ -4088,7 +4144,7 @@ namespace LightInject
         // ReSharper disable UnusedMember.Local
         private Func<T> CreateGenericDynamicMethodDelegate<T>(Func<object> del)
 
-            // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedMember.Local
         {
             return () => (T)del();
         }
@@ -4405,7 +4461,7 @@ namespace LightInject
             var openGenericServiceRegistrations =
                 GetOpenGenericServiceRegistrations(openGenericServiceType);
 
-            Dictionary<string, (Type closedGenericImplentingType, ILifetime lifetime)> candidates = new Dictionary<string, (Type closedGenericImplentingType, ILifetime lifetime)>();
+            Dictionary<string, (Type closedGenericImplentingType, ILifetime lifetime)> candidates = new Dictionary<string, (Type closedGenericImplentingType, ILifetime lifetime)>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var openGenericServiceRegistration in openGenericServiceRegistrations.Values)
             {
@@ -6205,7 +6261,7 @@ namespace LightInject
             return instances.GetOrAdd(scope, s => CreateScopedInstance(s, createInstance));
         }
 
-         /// <inheritdoc/>
+        /// <inheritdoc/>
         public ILifetime Clone()
         {
             return new PerScopeLifetime();
@@ -6269,10 +6325,6 @@ namespace LightInject
             var currentScope = CurrentScope;
 
             var scope = new Scope(this, currentScope);
-            if (currentScope != null)
-            {
-                currentScope.ChildScope = scope;
-            }
 
             CurrentScope = scope;
             return scope;
@@ -6284,11 +6336,6 @@ namespace LightInject
         /// <param name="scope">The scope to be ended.</param>
         public void EndScope(Scope scope)
         {
-            if (scope.ChildScope != null)
-            {
-                throw new InvalidOperationException("Attempt to end a scope before all child scopes are completed.");
-            }
-
             Scope parentScope = scope.ParentScope;
 
             // Only update the current scope if the scope being
@@ -6296,12 +6343,6 @@ namespace LightInject
             if (ReferenceEquals(CurrentScope, scope))
             {
                 CurrentScope = parentScope;
-            }
-
-            // What to do with the scope reference on the other thread?
-            if (parentScope != null)
-            {
-                parentScope.ChildScope = null;
             }
         }
 
@@ -6388,11 +6429,6 @@ namespace LightInject
         /// Gets the parent <see cref="Scope"/>.
         /// </summary>
         public Scope ParentScope { get; internal set; }
-
-        /// <summary>
-        /// Gets the child <see cref="Scope"/>.
-        /// </summary>
-        public Scope ChildScope { get; internal set; }
 
         /// <summary>
         /// Registers the <paramref name="disposable"/> so that it is disposed when the scope is completed.
@@ -6835,13 +6871,13 @@ namespace LightInject
             else
             {
                 try
-            {
-                return openGenericImplementingType.MakeGenericType(mappingResult.GetMappedArguments());
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+                {
+                    return openGenericImplementingType.MakeGenericType(mappingResult.GetMappedArguments());
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
         }
 
@@ -7145,13 +7181,11 @@ namespace LightInject
         public IEnumerable<Assembly> Load(string searchPattern)
         {
             string directory = Path.GetDirectoryName(new Uri(GetAssemblyCodeBasePath()).LocalPath);
-            if (directory != null)
+
+            string[] searchPatterns = searchPattern.Split('|');
+            foreach (string file in searchPatterns.SelectMany(sp => Directory.GetFiles(directory, sp)).Where(CanLoad))
             {
-                string[] searchPatterns = searchPattern.Split('|');
-                foreach (string file in searchPatterns.SelectMany(sp => Directory.GetFiles(directory, sp)).Where(CanLoad))
-                {
-                    yield return LoadAssembly(file);
-                }
+                yield return LoadAssembly(file);
             }
         }
 
@@ -8182,7 +8216,7 @@ namespace LightInject
         // ReSharper disable UnusedMember.Local
         private static Func<TService> CreateInstanceDelegate<TService>(IServiceFactory factory, string serviceName)
 
-            // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedMember.Local
         {
             return () => factory.GetInstance<TService>(serviceName);
         }
@@ -8236,7 +8270,7 @@ namespace LightInject
         // ReSharper disable UnusedMember.Local
         private static Func<TArg, TService> CreateGenericGetNamedParameterizedInstanceDelegate<TArg, TService>(IServiceFactory factory, string serviceName)
 
-            // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedMember.Local
         {
             return arg => factory.GetInstance<TArg, TService>(arg, serviceName);
         }
@@ -8244,7 +8278,7 @@ namespace LightInject
         // ReSharper disable UnusedMember.Local
         private static Func<TArg1, TArg2, TService> CreateGenericGetNamedParameterizedInstanceDelegate<TArg1, TArg2, TService>(IServiceFactory factory, string serviceName)
 
-            // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedMember.Local
         {
             return (arg1, arg2) => factory.GetInstance<TArg1, TArg2, TService>(arg1, arg2, serviceName);
         }
@@ -8252,7 +8286,7 @@ namespace LightInject
         // ReSharper disable UnusedMember.Local
         private static Func<TArg1, TArg2, TArg3, TService> CreateGenericGetNamedParameterizedInstanceDelegate<TArg1, TArg2, TArg3, TService>(IServiceFactory factory, string serviceName)
 
-            // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedMember.Local
         {
             return (arg1, arg2, arg3) => factory.GetInstance<TArg1, TArg2, TArg3, TService>(arg1, arg2, arg3, serviceName);
         }
@@ -8260,7 +8294,7 @@ namespace LightInject
         // ReSharper disable UnusedMember.Local
         private static Func<TArg1, TArg2, TArg3, TArg4, TService> CreateGenericGetNamedParameterizedInstanceDelegate<TArg1, TArg2, TArg3, TArg4, TService>(IServiceFactory factory, string serviceName)
 
-            // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedMember.Local
         {
             return (arg1, arg2, arg3, arg4) => factory.GetInstance<TArg1, TArg2, TArg3, TArg4, TService>(arg1, arg2, arg3, arg4, serviceName);
         }

@@ -2,12 +2,12 @@
   <PropertyGroup>
     <!-- <TargetFrameworks>net46;netstandard1.1;netstandard1.3;netstandard1.6;netstandard2.0;netcoreapp2.0;net452</TargetFrameworks> -->
     <TargetFrameworks>netcoreapp2.0;netstandard2.0;netstandard1.6;netstandard1.3;netstandard1.1;net46;net452</TargetFrameworks>
-    <Version>5.3.0</Version>
+    <Version>5.5.0</Version>
     <Authors>Bernhard Richter</Authors>
-    <PackageProjectUrl>http//www.lightinject.net</PackageProjectUrl>
+    <PackageProjectUrl>https://www.lightinject.net</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/seesharper/LightInject</RepositoryUrl>
-    <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>Bernhard Richter</Copyright>
     <PackageTags>Ioc Dependency-Injection Inversion-of-Control WinRT Windows-Runtime</PackageTags>
     <Description>An ultra lightweight Inversion of Control container for the .Net framework. See LightInject.Source for the source distribution.</Description>
@@ -23,9 +23,6 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <PackageId>LightInject.Signed</PackageId>
-    <SignAssembly>true</SignAssembly>    
-    <AssemblyOriginatorKeyFile>..\..\..\eberzosagh.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
