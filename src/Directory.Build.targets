@@ -1,0 +1,10 @@
+<Project>
+
+  <PropertyGroup>
+    <PackageId>EBerzosa.$(Product)</PackageId>
+    <Authors>Enrique Berzosa</Authors>
+    <Copyright>© Bernhard Richter, $([System.DateTime]::Now.Year) Enrique Berzosa</Copyright>
+    <RepositoryUrl>https://github.com/eberzosa/LightInject</RepositoryUrl>
+  </PropertyGroup>
+  
+</Project>

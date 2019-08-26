@@ -1,0 +1,27 @@
+<Project>
+
+  <!-- Settings -->
+  <PropertyGroup>
+    <VersionPrefix>3.0.0</VersionPrefix>
+  </PropertyGroup>
+
+  <!-- Project Settings -->
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\..\eberzosagh.snk</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- Packing -->
+  <PropertyGroup>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <!-- CI Helpers -->
+  <PropertyGroup>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\..\packages</PackageOutputPath>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  
+</Project>
